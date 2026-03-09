@@ -10,5 +10,15 @@ const TransactionSchema = new mongoose.Schema({
       },
       createdAt: Date
 });
+TransactionSchema.index({ merchantId: 1 });
+TransactionSchema.index({ transactionId: 1 });
+TransactionSchema.index({ status: 1 });
+TransactionSchema.index({ createdAt: -1 });
+
+TransactionSchema.index({
+      merchantId: 1,
+      status: 1,
+      createdAt: -1
+});
 
 module.exports = mongoose.model("Transaction", TransactionSchema);
