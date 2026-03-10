@@ -133,9 +133,19 @@ backend
 ```
 frontend
 │
+├── node_modules
+├── public
+│   └── favicon.svg
+│
 ├── src
+│
 │   ├── api
 │   │   └── axios.ts
+│   │
+│   ├── components
+│   │   ├── RefundModal.tsx
+│   │   ├── Timeline.tsx
+│   │   └── TransactionTable.tsx
 │   │
 │   ├── pages
 │   │   ├── Login.tsx
@@ -145,7 +155,20 @@ frontend
 │   ├── routes
 │   │   └── ProtectedRoute.tsx
 │   │
-│   └── components
+│   ├── styles
+│   │   └── dashboard.css
+│   │
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+│
+├── .env
+├── .gitignore
+├── index.html
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── vite.config.ts
 ```
 
 ---
@@ -405,13 +428,6 @@ npm run dev
 ```
 
 ---
-
-# Future Improvements
-
-* Role-based authentication
-* Refund approval workflow
-* Real-time notifications
-* Advanced analytics dashboard
 
 ---
 
