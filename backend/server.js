@@ -10,7 +10,9 @@ const refundRoutes = require("./src/routes/refundRoutes");
 
 const app = express();
 connectDB();
-app.use(cors());
+app.use(cors({
+      origin:"*"
+}));
 app.use(express.json());
 
 app.get('/',(req,res) => {
