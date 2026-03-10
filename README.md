@@ -103,11 +103,20 @@ MongoDB Atlas
 ```
 backend
 │
+├── node_modules
+│
 ├── src
+│
+│   ├── config
+│   │   └── db.js
+│   │
 │   ├── controllers
 │   │   ├── authController.js
 │   │   ├── transactionController.js
 │   │   └── refundController.js
+│   │
+│   ├── middleware
+│   │   └── authMiddleware.js
 │   │
 │   ├── models
 │   │   ├── Merchant.js
@@ -120,10 +129,15 @@ backend
 │   │   ├── transactionRoutes.js
 │   │   └── refundRoutes.js
 │   │
-│   ├── middleware
-│   │   └── authMiddleware.js
+│   ├── utils
+│   │   └── seedTransactions.js
 │   │
 │   └── server.js
+│
+├── .env
+├── .gitignore
+├── package.json
+└── package-lock.json
 ```
 
 ---
