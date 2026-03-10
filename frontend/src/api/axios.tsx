@@ -1,7 +1,9 @@
 import axios from "axios";
 
+// baseURL: "http://localhost:5000"
+
 const API = axios.create({
-      baseURL: "http://localhost:5000"
+      baseURL : "https://merchant-refund-portal-g6xl.onrender.com/"
 });
 
 // attach token automatically
