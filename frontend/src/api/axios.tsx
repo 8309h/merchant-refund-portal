@@ -1,14 +1,10 @@
 import axios from "axios";
 
-// baseURL: "http://localhost:5000"
-
 const API = axios.create({
-      baseURL : "https://merchant-refund-portal-g6xl.onrender.com/"
+      baseURL: import.meta.env.VITE_API_URL
 });
 
-// attach token automatically
 API.interceptors.request.use((config) => {
-
       const token = localStorage.getItem("token");
 
       if (token) {
@@ -16,7 +12,6 @@ API.interceptors.request.use((config) => {
       }
 
       return config;
-
 });
 
 export default API;
