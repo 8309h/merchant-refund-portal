@@ -1,6 +1,9 @@
 const Transaction = require("../models/Transaction");
+const Refund = require("../models/Refund");
 const StatusEvent = require("../models/StatusEvent");
 const mongoose = require("mongoose");
+const { Parser } = require("json2csv");
+
 
 
 exports.getTransactions = async (req, res) => {
@@ -113,6 +116,107 @@ exports.getTransactionById = async (req, res) => {
       } catch (error) {
 
             return res.status(500).json({
+                  success: false,
+                  message: error.message
+            });
+
+      }
+};
+
+exports.getAnalytics = async (req, res) => {
+      try {
+
+            const merchantId = req.user.id;
+
+            const totalTransactions = await Transaction.countDocuments({
+                  merchantId
+            });
+
+            const successfulTransactions = await Transaction.countDocuments({
+                  merchantId,
+                  status: "Successful"
+            });
+
+            const failedTransactions = await Transaction.countDocuments({
+                  merchantId,
+                  status: "Failed"
+            });
+
+            const refundedTransactions = await Transaction.countDocuments({
+                  merchantId,
+                  status: "Refunded"
+            });
+
+            const refundAggregation = await Refund.aggregate([
+                  {
+                        $match: {
+                              merchantId: new mongoose.Types.ObjectId(merchantId)
+                        }
+                  },
+                  {
+                        $group: {
+                              _id: null,
+                              totalRefundAmount: { $sum: "$refundAmount" }
+                        }
+                  }
+            ]);
+
+            const totalRefundAmount =
+                  refundAggregation.length > 0
+                        ? refundAggregation[0].totalRefundAmount
+                        : 0;
+
+            res.status(200).json({
+                  success: true,
+                  data: {
+                        totalTransactions,
+                        successfulTransactions,
+                        failedTransactions,
+                        refundedTransactions,
+                        totalRefundAmount
+                  }
+            });
+
+      } catch (error) {
+
+            console.error(error);
+
+            res.status(500).json({
+                  success: false,
+                  message: error.message
+            });
+
+      }
+};
+exports.exportTransactionsCSV = async (req, res) => {
+      try {
+
+            const merchantId = req.user.id;
+
+            const transactions = await Transaction.find({
+                  merchantId
+            }).sort({ createdAt: -1 });
+
+            const fields = [
+                  "transactionId",
+                  "amount",
+                  "status",
+                  "createdAt"
+            ];
+
+            const json2csv = new Parser({ fields });
+
+            const csv = json2csv.parse(transactions);
+
+            res.header("Content-Type", "text/csv");
+
+            res.attachment("transactions.csv");
+
+            return res.send(csv);
+
+      } catch (error) {
+
+            res.status(500).json({
                   success: false,
                   message: error.message
             });

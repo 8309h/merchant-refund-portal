@@ -7,7 +7,6 @@ exports.createRefund = async (req, res) => {
 
             const { transactionId, amount, reason } = req.body;
 
-            //  Find transaction
             const transaction = await Transaction.findOne({
                   transactionId,
                   merchantId: req.user.id
@@ -20,7 +19,6 @@ exports.createRefund = async (req, res) => {
                   });
             }
 
-            //  Check status
             if (transaction.status !== "Successful") {
                   return res.status(400).json({
                         success: false,
@@ -28,59 +26,116 @@ exports.createRefund = async (req, res) => {
                   });
             }
 
-            // Check refund already exists
             const existingRefund = await Refund.findOne({ transactionId });
 
             if (existingRefund) {
                   return res.status(400).json({
                         success: false,
-                        message: "Refund already processed for this transaction"
+                        message: "Refund already exists"
                   });
             }
 
-            //  Check refund within 30 days
-            const transactionDate = new Date(transaction.createdAt);
-            const today = new Date();
-
-            const diffDays = (today - transactionDate) / (1000 * 60 * 60 * 24);
-
-            if (diffDays > 30) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "Refund allowed only within 30 days of transaction"
-                  });
-            }
-
-            //  Validate refund amount
-            if (amount > transaction.amount) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "Refund amount cannot exceed original transaction amount"
-                  });
-            }
-
-            //  Create refund
             const refund = await Refund.create({
                   transactionId,
                   merchantId: transaction.merchantId,
                   refundAmount: amount,
-                  reason
+                  reason,
+                  status: "Requested"
             });
 
-            // Update transaction status
-            transaction.status = "Refunded";
-            await transaction.save();
-
-            // Add status timeline event
             await StatusEvent.create({
-                  transactionId: transaction.transactionId,
-                  status: "Refunded"
+                  transactionId,
+                  status: "Refund Requested"
             });
 
             res.status(201).json({
                   success: true,
-                  message: "Refund created successfully",
                   data: refund
+            });
+
+      } catch (error) {
+
+            res.status(500).json({
+                  success: false,
+                  message: error.message
+            });
+
+      }
+};
+exports.updateRefundStatus = async (req, res) => {
+      try {
+
+            const { id } = req.params;
+            const { status } = req.body;
+
+            const refund = await Refund.findById(id);
+
+            if (!refund) {
+                  return res.status(404).json({
+                        success: false,
+                        message: "Refund not found"
+                  });
+            }
+
+            refund.status = status;
+
+            await refund.save();
+
+            await StatusEvent.create({
+                  transactionId: refund.transactionId,
+                  status: `Refund ${status}`
+            });
+
+            if (status === "Completed") {
+
+                  await Transaction.updateOne(
+                        { transactionId: refund.transactionId },
+                        { status: "Refunded" }
+                  );
+
+            }
+
+            res.json({
+                  success: true,
+                  data: refund
+            });
+
+      } catch (error) {
+
+            res.status(500).json({
+                  success: false,
+                  message: error.message
+            });
+
+      }
+};
+
+exports.getRefunds = async (req, res) => {
+      try {
+
+            const page = parseInt(req.query.page) || 1;
+            const limit = 10;
+
+            const query = {
+                  merchantId: req.user.id
+            };
+
+            const refunds = await Refund.find(query)
+                  .sort({ createdAt: -1 })
+                  .skip((page - 1) * limit)
+                  .limit(limit);
+
+            const total = await Refund.countDocuments(query);
+
+            res.status(200).json({
+                  success: true,
+                  data: refunds,
+                  pagination: {
+                        total,
+                        page,
+                        pageSize: limit,
+                        totalPages: Math.ceil(total / limit)
+                  }
             });
 
       } catch (error) {

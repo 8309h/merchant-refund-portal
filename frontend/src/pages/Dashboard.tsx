@@ -37,6 +37,7 @@ function Dashboard() {
             <div className="container" style={{ padding: "20px" }}>
 
                   <h2>Transactions</h2>
+                 
 
                   {/* Filters */}
                   <div className="filters" style={{ marginBottom: "20px" }}>
@@ -84,6 +85,29 @@ function Dashboard() {
                                     setToDate(e.target.value);
                               }}
                         />
+
+                  </div>
+
+                  <div className="button-group">
+
+                        <Link to="/analytics">
+                              <button className="primary-btn">
+                                    Analytics
+                              </button>
+                        </Link>
+
+                        <Link to="/refunds">
+                              <button className="primary-btn">
+                                    Refund History
+                              </button>
+                        </Link>
+
+                        <button
+                              className="primary-btn"
+                              onClick={downloadCSV}
+                        >
+                              Export CSV
+                        </button>
 
                   </div>
 
@@ -159,5 +183,31 @@ function Dashboard() {
             </div>
       );
 }
+
+const downloadCSV = async () => {
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/transactions/export/csv`,
+            {
+                  headers: {
+                        Authorization: `Bearer ${token}`
+                  }
+            }
+      );
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+
+      a.href = url;
+
+      a.download = "transactions.csv";
+
+      a.click();
+};
 
 export default Dashboard;
